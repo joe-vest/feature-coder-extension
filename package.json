@@ -1,0 +1,246 @@
+{
+  "name": "feature-workflow",
+  "displayName": "feature-workflow",
+  "description": "Feature workflow control panel for LLM-assisted dev",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.107.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:featureWorkflowView",
+    "onCommand:featureWorkflow.refresh",
+    "onCommand:featureWorkflow.newFeature"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "featureWorkflowView",
+          "name": "Feature Workflow"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Feature Workflow",
+      "properties": {
+        "featureWorkflow.maxReviewIterations": {
+          "type": "number",
+          "default": 3,
+          "description": "Maximum number of Claude-OpenAI review loops before stopping"
+        },
+        "featureWorkflow.sessionTimeoutMinutes": {
+          "type": "number",
+          "default": 10,
+          "description": "Timeout in minutes for Claude Code sessions"
+        },
+        "featureWorkflow.openaiModel": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "OpenAI model to use for reviews"
+        },
+        "featureWorkflow.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API key. If empty, falls back to OPENAI_API_KEY environment variable."
+        },
+        "featureWorkflow.promptOverridesFile": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a JSON file containing custom prompts for spec/plan generation and review. Relative paths are resolved from workspace root."
+        },
+        "featureWorkflow.buildReviewMode": {
+          "type": "string",
+          "enum": ["openai-only", "architect-only", "both"],
+          "default": "both",
+          "description": "Who reviews BUILDER's code: OpenAI, ARCHITECT, or both in sequence"
+        },
+        "featureWorkflow.testCommand": {
+          "type": "string",
+          "default": "",
+          "description": "Command to run tests (e.g., 'npm test'). If empty, prompts user to run manually."
+        },
+        "featureWorkflow.maxBuildIterations": {
+          "type": "number",
+          "default": 5,
+          "description": "Max review iterations per build phase before requiring human intervention"
+        },
+        "featureWorkflow.reviewerProvider": {
+          "type": "string",
+          "enum": ["openai", "claude"],
+          "default": "openai",
+          "description": "Which LLM provider to use for spec/plan/code reviews: OpenAI API or Claude Code CLI"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "featureWorkflow.refresh",
+        "title": "Refresh Feature Workflow",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "featureWorkflow.newFeature",
+        "title": "New Feature",
+        "icon": "$(add)"
+      },
+      {
+        "command": "featureWorkflow.generateSpec",
+        "title": "Generate Spec (Claude + Review Loop)",
+        "enablement": "featureWorkflow.featureStatus == requested"
+      },
+      {
+        "command": "featureWorkflow.markSpecApproved",
+        "title": "Mark Spec Approved",
+        "enablement": "featureWorkflow.featureStatus == draft"
+      },
+      {
+        "command": "featureWorkflow.generatePlan",
+        "title": "Generate Plan (Claude + Review Loop)",
+        "enablement": "featureWorkflow.featureStatus == spec-reviewed"
+      },
+      {
+        "command": "featureWorkflow.markPlanApproved",
+        "title": "Mark Plan Approved",
+        "enablement": "featureWorkflow.featureStatus == plan-created"
+      },
+      {
+        "command": "featureWorkflow.markReadyForBuild",
+        "title": "Mark Ready for Build",
+        "enablement": "featureWorkflow.featureStatus == plan-reviewed"
+      },
+      {
+        "command": "featureWorkflow.startBuild",
+        "title": "Start Build (Claude BUILDER)",
+        "enablement": "featureWorkflow.featureStatus == ready-for-build"
+      },
+      {
+        "command": "featureWorkflow.runCodeReview",
+        "title": "Run Code Review",
+        "enablement": "featureWorkflow.featureStatus == building"
+      },
+      {
+        "command": "featureWorkflow.runTests",
+        "title": "Run Tests",
+        "enablement": "featureWorkflow.featureStatus == code-review"
+      },
+      {
+        "command": "featureWorkflow.approveBuild",
+        "title": "Approve Build",
+        "enablement": "featureWorkflow.featureStatus == testing"
+      },
+      {
+        "command": "featureWorkflow.rejectBuild",
+        "title": "Reject Build (Back to Building)",
+        "enablement": "featureWorkflow.featureStatus == code-review || featureWorkflow.featureStatus == testing"
+      },
+      {
+        "command": "featureWorkflow.openArtifact",
+        "title": "Open Feature Artifact"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "featureWorkflow.newFeature",
+          "when": "view == featureWorkflowView",
+          "group": "navigation"
+        },
+        {
+          "command": "featureWorkflow.refresh",
+          "when": "view == featureWorkflowView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == requested",
+          "command": "featureWorkflow.generateSpec",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == draft",
+          "command": "featureWorkflow.markSpecApproved",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == spec-reviewed",
+          "command": "featureWorkflow.generatePlan",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == plan-created",
+          "command": "featureWorkflow.markPlanApproved",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == plan-reviewed",
+          "command": "featureWorkflow.markReadyForBuild",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == ready-for-build",
+          "command": "featureWorkflow.startBuild",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == building",
+          "command": "featureWorkflow.runCodeReview",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == code-review",
+          "command": "featureWorkflow.runTests",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == code-review",
+          "command": "featureWorkflow.rejectBuild",
+          "group": "workflow@2"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == testing",
+          "command": "featureWorkflow.approveBuild",
+          "group": "workflow@1"
+        },
+        {
+          "when": "view == featureWorkflowView && viewItem == featureNode && featureWorkflow.featureStatus == testing",
+          "command": "featureWorkflow.rejectBuild",
+          "group": "workflow@2"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.107.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.27.1",
+    "eslint": "^9.39.1",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1"
+  },
+  "dependencies": {
+    "openai": "^6.15.0"
+  }
+}

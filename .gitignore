@@ -1,0 +1,23 @@
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+
+# Claude Code local settings (contains machine-specific permissions)
+.claude/settings.local.json
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# IDE and OS
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
