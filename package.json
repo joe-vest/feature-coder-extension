@@ -73,6 +73,11 @@
           "enum": ["openai", "claude"],
           "default": "openai",
           "description": "Which LLM provider to use for spec/plan/code reviews: OpenAI API or Claude Code CLI"
+        },
+        "featureWorkflow.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable verbose debug logging. Shows detailed Claude Code output, prompt contents, and internal state. Useful for troubleshooting."
         }
       }
     },

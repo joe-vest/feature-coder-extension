@@ -193,6 +193,7 @@ In VS Code settings (`featureWorkflow.*`):
 | `buildReviewMode` | both | Who reviews BUILDER's code: `openai-only` (uses configured reviewer), `architect-only`, or `both` |
 | `testCommand` | (empty) | Command to run tests (e.g., `npm test`). If empty, prompts user |
 | `maxBuildIterations` | 5 | Max review iterations per build phase |
+| `debugMode` | false | Enable verbose debug logging for troubleshooting |
 
 ### Custom Prompts
 
@@ -230,3 +231,4 @@ Relative paths are resolved from the workspace root.
 - **Concurrent features**: Each feature gets its own Claude session, so you can work on multiple features in parallel.
 - **No project modifications**: The extension doesn't scaffold scripts or modify your `package.json`. All LLM integrations run within the extension itself.
 - **Claude-only mode**: Set `reviewerProvider` to `claude` to use only Claude Code CLI (no OpenAI API key needed).
+- **Troubleshooting**: Enable `debugMode` to see detailed logging of Claude Code interactions, prompts, and internal state in the Output panel.

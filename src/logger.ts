@@ -3,9 +3,20 @@ import * as vscode from "vscode";
 /**
  * Centralized logging for the Feature Workflow extension.
  * Logs are written to a dedicated VS Code Output Channel.
+ *
+ * In normal mode, only INFO, WARN, and ERROR messages are shown.
+ * In debug mode (featureWorkflow.debugMode = true), DEBUG messages are also shown.
  */
 
 let outputChannel: vscode.OutputChannel | undefined;
+
+/**
+ * Check if debug mode is enabled
+ */
+function isDebugMode(): boolean {
+  const config = vscode.workspace.getConfiguration("featureWorkflow");
+  return config.get<boolean>("debugMode", false);
+}
 
 /**
  * Initialize the logger. Call this from extension.activate().
@@ -59,9 +70,13 @@ function log(level: LogLevel, category: string, message: string, data?: unknown)
 }
 
 /**
- * Debug level logging - verbose information for troubleshooting
+ * Debug level logging - verbose information for troubleshooting.
+ * Only outputs when featureWorkflow.debugMode is enabled.
  */
 export function debug(category: string, message: string, data?: unknown): void {
+  if (!isDebugMode()) {
+    return; // Skip debug messages in normal mode
+  }
   log("DEBUG", category, message, data);
 }
 

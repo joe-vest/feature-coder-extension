@@ -158,6 +158,7 @@ npx vsce package
 | `featureWorkflow.buildReviewMode` | Review mode: `openai-only` (uses configured reviewer), `architect-only`, `both` | `both` |
 | `featureWorkflow.testCommand` | Test command (empty = manual) | (empty) |
 | `featureWorkflow.maxBuildIterations` | Max review cycles per phase | `5` |
+| `featureWorkflow.debugMode` | Enable verbose debug logging | `false` |
 
 > **Note on Review Behavior:** The review loop only iterates when **major issues** are found. Minor issues and recommendations are written to the review file but not automatically sent back to ARCHITECT/BUILDER for incorporation. This keeps the loop efficient while preserving all feedback for human review.
 
